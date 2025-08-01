@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/providers/auth-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,6 +60,8 @@ export function UserNav() {
     return username ? username.substring(0, 2).toUpperCase() : "US";
   };
 
+
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -79,7 +81,7 @@ export function UserNav() {
                 {user.full_name || user.username}
               </span>
               <span className="text-xs text-muted-foreground">
-                {user.role || "Usuario"}
+                {user.is_superuser ? 'Administrador' : 'Usuario'}
               </span>
             </div>
           </div>

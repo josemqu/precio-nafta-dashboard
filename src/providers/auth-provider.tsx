@@ -2,12 +2,28 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { authService, User } from '@/lib/api-client';
+import { authService } from '@/lib/api-client';
+
+// Define the User type to match the API response
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  full_name: string;
+  is_active: boolean;
+  is_superuser: boolean;
+  // Additional fields we might use in the frontend
+  avatar?: string;
+  role?: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  error: string | null;
   login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (data: { username: string; email: string; full_name: string; password: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
@@ -121,6 +137,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         user,
         isAuthenticated: !!user,
         isLoading,
+        error: null, // You can update this to track errors if needed
         login,
         register,
         logout,

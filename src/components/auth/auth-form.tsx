@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/providers/auth-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,12 +29,14 @@ export function AuthForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   
-  const { login, register, isLoading, error: authError } = useAuth();
+  const { login, register, isLoading, error } = useAuth();
   
   // Mostrar errores de autenticación
-  if (authError && !formError) {
-    setFormError(authError);
-  }
+  useEffect(() => {
+    if (error && !formError) {
+      setFormError(error);
+    }
+  }, [error, formError]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,9 +54,13 @@ export function AuthForm() {
     setErrors({});
     
     try {
-      await login(loginData);
-      // Redirigir después de un inicio de sesión exitoso
-      router.push(redirectTo);
+      const result = await login(loginData.username, loginData.password);
+      if (result.success) {
+        // Redirigir después de un inicio de sesión exitoso
+        router.push(redirectTo);
+      } else {
+        setFormError(result.error || 'Error al iniciar sesión. Verifica tus credenciales.');
+      }
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
       setFormError('Error al iniciar sesión. Verifica tus credenciales.');
@@ -88,8 +94,26 @@ export function AuthForm() {
     }
     
     setErrors({});
-    const { confirmPassword, ...registrationData } = registerData;
-    await register(registrationData);
+    
+    try {
+      const result = await register({
+        username: registerData.username,
+        email: registerData.email,
+        full_name: registerData.full_name,
+        password: registerData.password
+      });
+      
+      if (result.success) {
+        // Iniciar sesión automáticamente después del registro
+        await login(registerData.username, registerData.password);
+        router.push(redirectTo);
+      } else {
+        setFormError(result.error || 'Error al registrarse. Intenta nuevamente.');
+      }
+    } catch (error) {
+      console.error('Error al registrarse:', error);
+      setFormError('Error al registrarse. Intenta nuevamente.');
+    }
   };
 
   return (
