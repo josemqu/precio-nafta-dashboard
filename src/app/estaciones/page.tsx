@@ -52,19 +52,29 @@ export default function StationsPage() {
     province: '',
     town: '',
     flag: '',
+    page: 1,
   });
   const [showFilters, setShowFilters] = useState(false);
   
-  const { data: stations = [], isLoading, error } = useStations({
-    province: filters.province || undefined,
+  const { data: stationsData, isLoading, error } = useStations({
+    province: filters.province === 'all' ? undefined : filters.province,
     town: filters.town || undefined,
-    flag: filters.flag || undefined,
+    flag: filters.flag === 'all' ? undefined : filters.flag,
+    page: filters.page,
   });
 
+  const stations = stationsData?.data || [];
+
   const handleFilterChange = (key: string, value: string) => {
+    // Reset to first page when filters change
+    const updates: any = { [key]: value };
+    if (key !== 'page') {
+      updates.page = 1; // Reset to first page when filters change
+    }
+    
     setFilters(prev => ({
       ...prev,
-      [key]: value
+      ...updates
     }));
   };
 
@@ -73,6 +83,7 @@ export default function StationsPage() {
       province: '',
       town: '',
       flag: '',
+      page: 1,
     });
   };
 
@@ -107,7 +118,7 @@ export default function StationsPage() {
                     <SelectValue placeholder="Todas las provincias" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas las provincias</SelectItem>
+                    <SelectItem value="all">Todas las provincias</SelectItem>
                     {PROVINCES.map((province) => (
                       <SelectItem key={province} value={province}>
                         {province}
@@ -141,7 +152,7 @@ export default function StationsPage() {
                     <SelectValue placeholder="Todas las marcas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas las marcas</SelectItem>
+                    <SelectItem value="all">Todas las marcas</SelectItem>
                     {FLAGS.map((flag) => (
                       <SelectItem key={flag} value={flag}>
                         {flag}
@@ -176,8 +187,11 @@ export default function StationsPage() {
             </div>
           ) : (
             <StationsList 
-              stations={stations} 
-              isLoading={isLoading} 
+              stations={stations}
+              isLoading={isLoading}
+              currentPage={filters.page}
+              totalPages={stationsData?.totalPages || 1}
+              onPageChange={(page) => handleFilterChange('page', page.toString())}
             />
           )}
         </div>
